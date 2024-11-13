@@ -10,12 +10,14 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final _controler = TextEditingController();
+  final _controller = TextEditingController();
+  DateTime? selectedDate;
 
+  // Updated to include deadline
   List toDoList = [
-    ['learn flutter', false],
-    ['learn web', false],
-    ['learn java', false],
+    ['learn flutter', false, null],
+    ['learn web', false, null],
+    ['learn java', false, null],
   ];
 
   void checkBoxChanged(int index) {
@@ -24,10 +26,14 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  void saveNewTask() {
+  Future<void> saveNewTask() async {
+    // Prompt for deadline selection
+    await selectDate(context);
+
     setState(() {
-      toDoList.add([_controler.text, false]);
-      _controler.clear();
+      toDoList.add([_controller.text, false, selectedDate]);
+      _controller.clear();
+      selectedDate = null; // Reset selectedDate after adding the task
     });
   }
 
@@ -35,6 +41,20 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       toDoList.removeAt(index);
     });
+  }
+
+  Future<void> selectDate(BuildContext context) async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2101),
+    );
+    if (pickedDate != null) {
+      setState(() {
+        selectedDate = pickedDate;
+      });
+    }
   }
 
   @override
@@ -63,6 +83,7 @@ class _HomePageState extends State<HomePage> {
           return ToDoList(
             taskName: toDoList[index][0],
             taskCompleted: toDoList[index][1],
+            deadline: toDoList[index][2],
             onChanged: (value) => checkBoxChanged(index),
             deleteFunction: (context) => deleteTask(index),
           );
@@ -79,7 +100,7 @@ class _HomePageState extends State<HomePage> {
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: TextField(
-                  controller: _controler,
+                  controller: _controller,
                   decoration: InputDecoration(
                     hintText: 'Add new to-do item',
                     filled: true,
